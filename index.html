@@ -1,0 +1,97 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	$("div#main").html("<div id='msg'>Loading weather for your favorite cities...</div>");
+	processCities(i=0);
+});
+
+var cities = [
+	"San Francisco,37.775320,-122.413570",
+	"Portland,45.514932,-122.683270",
+	"Seattle,47.604578,-122.329734",
+	"Chicago,41.877374,-87.656661",
+	"Boston,42.360492,-71.064033",
+	"New York,40.714678,-73.995893",
+	"Washington DC,38.891783,-77.032429",
+	"Atlanta,33.748224,-84.384909",
+	"Miami,25.772414,-80.195034",
+	"New Orleans,29.952293,-90.086760"
+];
+
+// Loop over cities array, passing city name, lattitude, longitude, and index 
+// value to the getWeather function
+function processCities(i) {
+	if (cities[i] != null) {
+	    var cityInfo = cities[i].split(',');
+		var curCity=cityInfo[0];
+		var curLat=cityInfo[1];
+		var curLong=cityInfo[2];    
+		getWeather(curCity,curLat,curLong,i);	    	
+	}
+}
+
+// Use passed values to make an ajax call to the server page - getWeatherData.php.
+// Pass the result to the displayWeather function to render in the browser
+function getWeather(curCity,curLat,curLong,i) {
+	$.ajax({
+		type: 'GET',
+		cache: false,
+		url: "getWeatherData.php",
+		data: {
+			latitude: curLat,
+			longitude: curLong
+		},
+		dataType:'json',
+		success: function( result ) {
+		    displayWeather(result.currently, curCity);
+		    processCities(i+1);
+		}
+	});			
+}
+
+// Take the result from the ajax call along with the provide city name and
+// construct a styled div to inject into the main container of the page
+function displayWeather(result, curCity) {
+	var html = "<div class='weather_card'>";
+	html += "<h2>"+curCity+"</h2>";
+	html += "<p>Current Conditions:&nbsp;"+result.summary+"</p>";
+	html += "<p>Current Temperature:&nbsp;"+parseFloat(result.temperature).toFixed()+" degrees</p>";
+	html += "</div>";
+	$("#msg").hide();
+	$("#main").append(html);
+}
+
+// This function is called every minute to remove the existing weather cards,
+// show the loading message, and call processCities in order to restart the loading
+// of weather data
+function reloadWeather() {
+	//reset the UI
+	$(".weather_card").remove();
+	$("#msg").show();
+	//get updated weather data
+	processCities(i=0);
+}
+setInterval(reloadWeather, 60000);
+</script>
+<style>
+body {
+    font-family: Verdana, Geneva, sans-serif;
+}
+
+.weather_card {
+	float:left;
+	border:1px solid black;
+	padding:10px;
+	margin:10px;
+	background-color: #dcdcdc;
+}
+</style>
+</head>
+<body>
+<div id="main">
+
+</div>
+</body>
+</html>
